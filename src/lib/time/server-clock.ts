@@ -22,7 +22,17 @@ let offsetMs = 0;
 let synced = false;
 const listeners = new Set<() => void>();
 
+export interface ClockSnapshot {
+  offsetMs: number;
+  synced: boolean;
+}
+
+// `useSyncExternalStore` compara snapshots por identidad: hay que devolver
+// el mismo objeto mientras nada cambie.
+let snapshot: ClockSnapshot = { offsetMs, synced };
+
 function notify() {
+  snapshot = { offsetMs, synced };
   for (const l of listeners) l();
 }
 
@@ -30,8 +40,8 @@ export function serverNow(): number {
   return Date.now() + offsetMs;
 }
 
-export function getClockSnapshot(): { offsetMs: number; synced: boolean } {
-  return { offsetMs, synced };
+export function getClockSnapshot(): ClockSnapshot {
+  return snapshot;
 }
 
 export function subscribeClock(listener: () => void): () => void {
